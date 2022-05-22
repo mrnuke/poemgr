@@ -140,6 +140,7 @@ int poemgr_show(struct poemgr_ctx *ctx)
 	const bool has_input = !!ctx->profile->update_input_status;
 	struct poemgr_pse_chip *pse_chip;
 	struct poemgr_metric metric_buf;
+	const char *pse_model;
 	char port_idx[3];
 	int ret = 0;
 
@@ -212,7 +213,8 @@ int poemgr_show(struct poemgr_ctx *ctx)
 		pse_obj = json_object_new_object();
 		json_object_array_add(pse_arr, pse_obj);
 
-		json_object_object_add(pse_obj, "model", json_object_new_string(pse_chip->model));
+		pse_model = pse_chip->model ? pse_chip->model : "unknown";
+		json_object_object_add(pse_obj, "model", json_object_new_string(pse_model));
 
 		for (int j = 0; j < pse_chip->num_metrics; j++) {
 			ret = pse_chip->export_metric(pse_chip, &metric_buf, j);
