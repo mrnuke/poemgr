@@ -7,7 +7,7 @@ LDFLAGS+=$(shell pkg-config --libs json-c) -luci
 all: poemgr
 
 poemgr:
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OUT) pd69104.c poemgr.c uswflex.c
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(OUT) pd69104.c poemgr.c uswflex.c unreal-tek.c
 
 clean:
 	rm $(OUT)

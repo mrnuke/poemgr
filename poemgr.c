@@ -10,9 +10,11 @@
 #include "poemgr.h"
 
 extern const struct poemgr_profile poemgr_profile_uswflex;
+extern const struct poemgr_profile poemgr_profile_unreal;
 
 static const struct poemgr_profile *poemgr_profiles[] = {
 	&poemgr_profile_uswflex,
+	&poemgr_profile_unreal,
 	NULL
 };
 
