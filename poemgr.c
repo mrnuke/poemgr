@@ -224,7 +224,7 @@ int poemgr_show(struct poemgr_ctx *ctx)
 			}
 		}
 	}
-	
+
 
 	/* Save to char pointer */
 	const char *c = json_object_to_json_string_ext(root_obj, JSON_C_TO_STRING_PRETTY);
@@ -267,7 +267,7 @@ int poemgr_apply(struct poemgr_ctx *ctx)
 
 	if (!ctx->profile->apply_config)
 		return 0;
-	
+
 	return ctx->profile->apply_config(ctx);
 }
 
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 	/* check which action we are supposed to perform */
 	if (argc > 1)
 		action = argv[1];
-	
+
 	if (!strcmp(POEMGR_ACTION_STRING_SHOW, action)) {
 		/* Show */
 		ret = poemgr_show(&ctx);
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
 		/* Disable */
 		ret = poemgr_disable(&ctx);
 	}
-	
+
 	if (uci_ctx)
 		uci_free_context(uci_ctx);
 
