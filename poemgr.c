@@ -16,6 +16,19 @@ static const struct poemgr_profile *poemgr_profiles[] = {
 	NULL
 };
 
+static const struct poemgr_profile *get_profile_by_name(const char *desired_name)
+{
+	const struct poemgr_profile *profile, **walker;
+
+	for (walker = poemgr_profiles; *walker; walker++) {
+		profile = *walker;
+		if (!strcmp(profile->name, desired_name))
+			return profile;
+	};
+
+	return NULL;
+}
+
 static int uci_lookup_option_int(struct uci_context* uci, struct uci_section* s,
 								 const char* name)
 {
@@ -317,11 +330,11 @@ int main(int argc, char *argv[])
 		exit(1);
 
 	/* Select profile */
-	profile = poemgr_profiles[0];
-	while (1) {
-		if (!strcmp(profile->name, ctx.settings.profile) || profile == NULL) {
-			break;
-		}
+	profile = get_profile_by_name(ctx.settings.profile);
+	if (!profile) {
+		fprintf(stderr, "No profile found for \"%s\"\n",
+				 ctx.settings.profile);
+		exit(1);
 	}
 
 	reason = sanity_check_profile(profile);
