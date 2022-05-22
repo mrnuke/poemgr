@@ -277,11 +277,27 @@ int poemgr_apply(struct poemgr_ctx *ctx)
 	return ctx->profile->apply_config(ctx);
 }
 
+const char *sanity_check_profile(const struct poemgr_profile *profile)
+{
+	if (profile->num_ports > POEMGR_MAX_PORTS)
+		return "too many ports";
+
+	if (profile->num_pse_chips > POEMGR_MAX_PSE_CHIPS)
+		return "too many pse chips";
+
+	if (!profile ->init || !profile ->ready
+	   || !profile ->update_port_status || !profile ->update_output_status)
+		return "missing mandatory member function";
+
+	return NULL;
+}
+
 int main(int argc, char *argv[])
 {
 	struct uci_context *uci_ctx = uci_alloc_context();
 	static struct poemgr_profile *profile;
 	struct poemgr_ctx ctx = {};
+	const char *reason;
 	char *action;
 	int ret;
 
@@ -301,8 +317,11 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	if (profile == NULL)
+	reason = sanity_check_profile(profile);
+	if (reason) {
+	    fprintf(stderr, "Profile failed sanity check: %s\n", reason);
 		exit(1);
+	}
 
 	ctx.profile = profile;
 
