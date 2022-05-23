@@ -47,8 +47,8 @@ struct poemgr_port_settings {
 struct poemgr_port_status {
 	int enabled;
 	int active;
-	int power_limit;
-	int power;
+	float power_limit;
+	float power;
 	int poe_class;
 
 	int faults;
@@ -68,7 +68,7 @@ struct poemgr_input_status {
 };
 
 struct poemgr_output_status {
-	int power_budget;
+	float power_budget;
 
 	time_t last_update;
 };

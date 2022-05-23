@@ -131,6 +131,14 @@ static json_object *poemgr_create_port_fault_array(int faults)
 	return arr;
 }
 
+struct json_object *json_float(float val)
+{
+	char format[16];
+
+	snprintf(format, sizeof(format), "%.1f", val);
+	return json_object_new_double_s(val, format);
+}
+
 int poemgr_show(struct poemgr_ctx *ctx)
 {
 	struct json_object *root_obj, *ports_obj, *port_obj, *pse_arr, *pse_obj, *input_obj, *output_obj;
@@ -181,7 +189,7 @@ int poemgr_show(struct poemgr_ctx *ctx)
 	/* Get PoE output information */
 	output_obj = json_object_new_object();
 
-	json_object_object_add(output_obj, "power_budget", json_object_new_int(ctx->output_status.power_budget));
+	json_object_object_add(output_obj, "power_budget", json_float(ctx->output_status.power_budget));
 
 	/* Get port information */
 	ports_obj = json_object_new_object();
@@ -191,8 +199,8 @@ int poemgr_show(struct poemgr_ctx *ctx)
 		json_object_object_add(port_obj, "enabled", json_object_new_boolean(!!ctx->ports[i].status.enabled));
 		json_object_object_add(port_obj, "active", json_object_new_boolean(!!ctx->ports[i].status.active));
 		json_object_object_add(port_obj, "poe_class", json_object_new_int(ctx->ports[i].status.poe_class));
-		json_object_object_add(port_obj, "power", json_object_new_int(ctx->ports[i].status.power));
-		json_object_object_add(port_obj, "power_limit", json_object_new_int(ctx->ports[i].status.power_limit));
+		json_object_object_add(port_obj, "power", json_float(ctx->ports[i].status.power));
+		json_object_object_add(port_obj, "power_limit", json_float(ctx->ports[i].status.power_limit));
 		json_object_object_add(port_obj, "name", !!ctx->ports[i].settings.name ? json_object_new_string(ctx->ports[i].settings.name) : NULL);
 		json_object_object_add(port_obj, "faults", poemgr_create_port_fault_array(ctx->ports[i].status.faults));
 		/* ToDo: Export PSE specific data */
