@@ -9,9 +9,9 @@
 
 #include "poemgr.h"
 
-extern struct poemgr_profile poemgr_profile_uswflex;
+extern const struct poemgr_profile poemgr_profile_uswflex;
 
-static struct poemgr_profile *poemgr_profiles[] = {
+static const struct poemgr_profile *poemgr_profiles[] = {
 	&poemgr_profile_uswflex,
 	NULL
 };
@@ -214,7 +214,7 @@ int poemgr_show(struct poemgr_ctx *ctx)
 	pse_arr = json_object_new_array();
 	json_object_object_add(root_obj, "pse", pse_arr);
 	for (int i = 0; i < ctx->profile->num_pse_chips; i++) {
-		pse_chip = &ctx->profile->pse_chips[i];
+		pse_chip = &ctx->pse_chips[i];
 		pse_obj = json_object_new_object();
 		json_object_array_add(pse_arr, pse_obj);
 
@@ -302,7 +302,7 @@ const char *sanity_check_profile(const struct poemgr_profile *profile)
 int main(int argc, char *argv[])
 {
 	struct uci_context *uci_ctx = uci_alloc_context();
-	static struct poemgr_profile *profile;
+	const struct poemgr_profile *profile;
 	struct poemgr_ctx ctx = {};
 	const char *reason;
 	char *action;

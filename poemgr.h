@@ -78,15 +78,6 @@ struct poemgr_settings {
 	char *profile;
 };
 
-struct poemgr_ctx {
-	struct poemgr_settings settings;
-	struct poemgr_port ports[POEMGR_MAX_PORTS];
-	struct poemgr_profile *profile;
-
-	struct poemgr_input_status input_status;
-	struct poemgr_output_status output_status;
-};
-
 struct poemgr_metric {
 	enum poemgr_metric_type type;
 	char *name;
@@ -108,14 +99,22 @@ struct poemgr_pse_chip {
 	int (*export_metric)(struct poemgr_pse_chip *pse_chip, struct poemgr_metric *output, int metric);
 };
 
+struct poemgr_ctx {
+	struct poemgr_settings settings;
+	struct poemgr_port ports[POEMGR_MAX_PORTS];
+	struct poemgr_pse_chip pse_chips[POEMGR_MAX_PSE_CHIPS];
+	const struct poemgr_profile *profile;
+
+	struct poemgr_input_status input_status;
+	struct poemgr_output_status output_status;
+
+	void *priv;
+};
+
 struct poemgr_profile {
 	char *name;
 	int num_ports;
-
-	struct poemgr_pse_chip pse_chips[POEMGR_MAX_PSE_CHIPS];
 	int num_pse_chips;
-
-	void *priv;
 
 	int (*init)(struct poemgr_ctx *);
 	int (*ready)(struct poemgr_ctx *);
@@ -139,7 +138,7 @@ static inline const char *poemgr_poe_type_to_string(enum poemgr_poe_type poe_typ
 	return "unknown";
 }
 
-static inline struct poemgr_pse_chip *poemgr_profile_pse_chip_get(struct poemgr_profile *profile, int pse_idx)
+static inline struct poemgr_pse_chip *poemgr_ctx_pse_chip_get(struct poemgr_ctx *ctx, int pse_idx)
 {
-	return &profile->pse_chips[pse_idx];
-} 
+	return &ctx->pse_chips[pse_idx];
+}

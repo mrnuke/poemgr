@@ -16,7 +16,7 @@
 
 static enum poemgr_poe_type poemgr_uswflex_read_power_input(struct poemgr_ctx *ctx)
 {
-	struct poemgr_pse_chip *psechip = poemgr_profile_pse_chip_get(ctx->profile, USWLFEX_NUM_PSE_CHIP_IDX);
+	struct poemgr_pse_chip *psechip = poemgr_ctx_pse_chip_get(ctx, USWLFEX_NUM_PSE_CHIP_IDX);
 	int reg;
 
 	/* PSE has 4 input pins (4 bits in register), the USW-Flex only cares for the first 3 LSB */
@@ -60,7 +60,7 @@ static int poemgr_uswflex_get_power_budget(enum poemgr_poe_type poe_type)
 }
 
 static int poemgr_uswflex_init_chip(struct poemgr_ctx *ctx) {
-	struct poemgr_pse_chip *psechip = poemgr_profile_pse_chip_get(ctx->profile, USWLFEX_NUM_PSE_CHIP_IDX);
+	struct poemgr_pse_chip *psechip = poemgr_ctx_pse_chip_get(ctx, USWLFEX_NUM_PSE_CHIP_IDX);
 
 	/* Init PD69104 */
 	if (pd69104_init(psechip, 0, 0x20, USWFLEX_PSE_PORTMASK))
@@ -70,7 +70,7 @@ static int poemgr_uswflex_init_chip(struct poemgr_ctx *ctx) {
 }
 
 static int poemgr_uswflex_ready(struct poemgr_ctx *ctx) {
-	struct poemgr_pse_chip *psechip = poemgr_profile_pse_chip_get(ctx->profile, USWLFEX_NUM_PSE_CHIP_IDX);
+	struct poemgr_pse_chip *psechip = poemgr_ctx_pse_chip_get(ctx, USWLFEX_NUM_PSE_CHIP_IDX);
 
 	/* Check if PSE is up. */
 	return pd69104_device_online(psechip);
@@ -100,7 +100,7 @@ static int poemgr_uswflex_disable_chip(struct poemgr_ctx *ctx)
 
 static int poemgr_uswflex_update_port_status(struct poemgr_ctx *ctx, int port)
 {
-	struct poemgr_pse_chip *psechip = poemgr_profile_pse_chip_get(ctx->profile, USWLFEX_NUM_PSE_CHIP_IDX);
+	struct poemgr_pse_chip *psechip = poemgr_ctx_pse_chip_get(ctx, USWLFEX_NUM_PSE_CHIP_IDX);
 	struct poemgr_port_status *port_status = &ctx->ports[port].status;
 
 	port_status->power = pd69104_port_power_consumption_get(psechip, port);
@@ -131,7 +131,7 @@ static int poemgr_uswflex_update_input_status(struct poemgr_ctx *ctx)
 
 static int poemgr_uswflex_apply_config(struct poemgr_ctx *ctx)
 {
-	struct poemgr_pse_chip *psechip = poemgr_profile_pse_chip_get(ctx->profile, USWLFEX_NUM_PSE_CHIP_IDX);
+	struct poemgr_pse_chip *psechip = poemgr_ctx_pse_chip_get(ctx, USWLFEX_NUM_PSE_CHIP_IDX);
 	int poe_budget = poemgr_uswflex_get_power_budget(poemgr_uswflex_read_power_input(ctx));
 	struct poemgr_port_settings *port_settings;
 	int port_settings_available;
@@ -179,7 +179,7 @@ out:
 	return 0;
 }
 
-struct poemgr_profile poemgr_profile_uswflex = {
+const struct poemgr_profile poemgr_profile_uswflex = {
 	.name = "usw-flex",
 	.num_ports = USWLFEX_NUM_PORTS,
 	.ready = &poemgr_uswflex_ready,
