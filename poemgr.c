@@ -30,14 +30,10 @@ static int poemgr_load_port_settings(struct poemgr_ctx *ctx, struct uci_context 
 	struct uci_element *e;
 	struct uci_section *s;
 	int port_idx;
-	int ret = 0;
 
 	package = uci_lookup_package(uci_ctx, "poemgr");
-
-	if (!package) {
-		ret = 1;
-		goto out;
-	}
+	if (!package)
+		return 1;
 
 	uci_foreach_element(&package->sections, e) {
 		s = uci_to_section(e);
@@ -49,16 +45,13 @@ static int poemgr_load_port_settings(struct poemgr_ctx *ctx, struct uci_context 
 		name = uci_lookup_option_string(uci_ctx, s, "name");
 		disabled = uci_lookup_option_string(uci_ctx, s, "disabled");
 
-		if (!port) {
-			ret = 1;
-			goto out;
-		}
+		if (!port)
+			return 1;
 
 		port_idx = atoi(port);
 		if (port_idx == -1) {
 			/* No port specified */
-			ret = 1;
-			goto out;
+			return 1;
 		} else if (port_idx >= ctx->profile->num_ports) {
 			/* Port does not exist. Ignore. */
 			continue;
@@ -67,8 +60,8 @@ static int poemgr_load_port_settings(struct poemgr_ctx *ctx, struct uci_context 
 		ctx->ports[port_idx].settings.name =  name ? strdup(name) : strdup(port);
 		ctx->ports[port_idx].settings.disabled = disabled ? !!atoi(disabled) : 0;
 	}
-out:
-	return ret;
+
+	return 0;
 }
 
 int poemgr_load_settings(struct poemgr_ctx *ctx, struct uci_context *uci_ctx)
