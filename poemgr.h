@@ -120,6 +120,7 @@ struct poemgr_profile {
 	int (*ready)(struct poemgr_ctx *);
 	int (*enable)(struct poemgr_ctx *);
 	int (*disable)(struct poemgr_ctx *);
+	int (*reset)(struct poemgr_ctx *);
 	int (*apply_config)(struct poemgr_ctx *);
 	int (*update_port_status)(struct poemgr_ctx *, int port);
 	int (*update_input_status)(struct poemgr_ctx *);

@@ -282,6 +282,14 @@ int poemgr_disable(struct poemgr_ctx *ctx)
 	return ctx->profile->disable(ctx);
 }
 
+int poemgr_reset(struct poemgr_ctx *ctx)
+{
+	if (!ctx->profile->reset)
+		return 0;
+
+	return ctx->profile->reset(ctx);
+}
+
 int poemgr_apply(struct poemgr_ctx *ctx)
 {
 	/* Implicitly enable profile. */
@@ -374,6 +382,8 @@ int main(int argc, char *argv[])
 	} else if (!strcmp(POEMGR_ACTION_STRING_DISABLE, action)) {
 		/* Disable */
 		ret = poemgr_disable(&ctx);
+	} else if (!strcmp("reset", action)) {
+		ret = poemgr_reset(&ctx);
 	}
 
 	if (uci_ctx)
