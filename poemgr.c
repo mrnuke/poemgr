@@ -40,7 +40,7 @@ static int uci_lookup_option_int(struct uci_context* uci, struct uci_section* s,
 
 static int poemgr_load_port_settings(struct poemgr_ctx *ctx, struct uci_context *uci_ctx)
 {
-	const char *disabled, *port, *name;
+	const char *disabled, *port, *pse_port, *name;
 	struct uci_package *package;
 	struct uci_element *e;
 	struct uci_section *s;
@@ -61,6 +61,7 @@ static int poemgr_load_port_settings(struct poemgr_ctx *ctx, struct uci_context 
 			continue;
 
 		port = uci_lookup_option_string(uci_ctx, s, "port");
+		pse_port = uci_lookup_option_string(uci_ctx, s, "pse_port");
 		name = uci_lookup_option_string(uci_ctx, s, "name");
 		disabled = uci_lookup_option_string(uci_ctx, s, "disabled");
 
@@ -78,6 +79,7 @@ static int poemgr_load_port_settings(struct poemgr_ctx *ctx, struct uci_context 
 
 		ctx->ports[port_idx].settings.name =  name ? strdup(name) : strdup(port);
 		ctx->ports[port_idx].settings.disabled = disabled ? !!atoi(disabled) : 0;
+		ctx->ports[port_idx].settings.pse_port = pse_port ? atoi(pse_port) : -1;
 	}
 
 	return 0;
