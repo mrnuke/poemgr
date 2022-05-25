@@ -523,6 +523,25 @@ static int unreal_update_output_status(struct poemgr_ctx *ctx)
 	return 0;
 }
 
+static int yippiekakay_reset(struct poemgr_ctx *ctx)
+{
+	struct unreal_poe *poe = ctx->priv;
+	int ret;
+
+	struct unreal_cmd reset_controller = {
+		.raw = { 0x09, 0x00, 0x01 },
+		.len = 3,
+	};
+
+	ret = transcieve_command(poe, &reset_controller);
+	if (ret < 0) {
+		printf("transcieve_command says %d\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 
 const struct poemgr_profile poemgr_profile_unreal = {
 	.name = "unreal-tek",
@@ -535,4 +554,5 @@ const struct poemgr_profile poemgr_profile_unreal = {
 	.update_port_status = unreal_update_port_status,
 	.update_output_status = unreal_update_output_status,
 	.num_pse_chips = 0,
+	.reset = yippiekakay_reset,
 };
