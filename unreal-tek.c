@@ -321,6 +321,26 @@ static int unreal_more_info(struct unreal_poe *poe)
 	return 0;
 }
 
+static int enable_port_mapping(struct unreal_poe *poe)
+{
+	struct unreal_cmd enable_port_map = {
+		.raw = { 0x02, 0x00, 0x01 },
+		.len = 3,
+	};
+
+	return transcieve_request(poe, &enable_port_map);
+}
+
+static int do_map_port(struct unreal_poe *poe, unsigned int port, unsigned int pse_out)
+{
+	struct unreal_cmd set_port_map = {
+		.raw = { 0x1d, 0x00, port, pse_out },
+		.len = 4,
+	};
+
+	return transcieve_request(poe, &set_port_map);
+}
+
 static int unreal_init(struct poemgr_ctx *ctx)
 {
 	struct unreal_poe *poe;
@@ -379,6 +399,24 @@ static int unreal_disable(struct poemgr_ctx *ctx)
 	return set_global_port_enable(ctx->priv, false);
 }
 
+static int unreal_map_ports(struct poemgr_ctx *ctx)
+{
+	struct poemgr_port_settings *port_setting;
+	size_t port;
+
+	enable_port_mapping(ctx->priv);
+
+	for (port = 0; port < ctx->profile->num_ports; port++) {
+		port_setting = &ctx->ports[port].settings;
+		if (port_setting->disabled || (port_setting->pse_port < 0))
+			continue;
+
+		do_map_port(ctx->priv, port, port_setting->pse_port);
+	}
+
+	return 0;
+}
+
 static int unreal_configure_ports(struct poemgr_ctx *ctx)
 {
 	struct poemgr_port_settings *port_setting;
@@ -405,6 +443,7 @@ static int unreal_apply_config(struct poemgr_ctx *ctx)
 	struct unreal_poe *poe = ctx->priv;
 
 	set_power_management_mode(poe, URTL_PWR_MGMNT_DYNAMIC);
+	unreal_map_ports(ctx);
 	unreal_configure_ports(ctx);
 	return 0;
 }
