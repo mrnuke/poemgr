@@ -35,6 +35,10 @@ static int poemgr_load_port_settings(struct poemgr_ctx *ctx, struct uci_context 
 	if (!package)
 		return 1;
 
+	/* Make sure unconfigured ports are 'disabled' */
+	for (port_idx = 0; port_idx < ctx->profile->num_ports; port_idx++)
+		ctx->ports[port_idx].settings.disabled = 1;
+
 	uci_foreach_element(&package->sections, e) {
 		s = uci_to_section(e);
 
