@@ -56,6 +56,21 @@ static const char *mcu_name_from_type(unsigned int type)
 	return names[type];
 }
 
+static const char *powerup_mode_name(unsigned int mode)
+{
+	static const char *names[] = {
+		[0] = "802.3af",
+		[1] = "legacy",
+		[2] = "pre-802.3at",
+		[3] = "802.3at",
+	};
+
+	if (mode >= ARRAY_SIZE(names))
+		return "unknown";
+
+	return names[mode];
+}
+
 static int urtl_to_poemgr_fault(uint8_t fault)
 {
 	static const int faults[] = {
@@ -234,6 +249,7 @@ static int set_port_priority(struct unreal_poe *poe, uint8_t port, uint8_t prior
 static int unreal_sys_info(struct unreal_poe *poe)
 {
 	unsigned int system_status, version_major, version_minor;
+	unsigned int mode, port_map, device_id;
 	int ret;
 
 	struct unreal_cmd system_info = {
@@ -245,7 +261,10 @@ static int unreal_sys_info(struct unreal_poe *poe)
 	if (ret < 0)
 		return ret;
 
+	mode = system_info.raw[2];
 	poe->num_ports_detected = system_info.raw[3];
+	port_map = system_info.raw[4];
+	device_id = read16_be(system_info.raw + 5);
 	version_major = system_info.raw[7];
 	poe->mcu_name = mcu_name_from_type(system_info.raw[8]);
 	system_status = system_info.raw[9];
@@ -255,6 +274,50 @@ static int unreal_sys_info(struct unreal_poe *poe)
 	poe->configuration_is_unsaved = !!(system_status & (1 << 0));
 	poe->remote_enable_gpio = !!(system_status & (1 << 1));
 	poe->output_pairing_enabled = !!(system_status & (1 << 2));
+
+	printf("PoE system: mode=%u, max_ports=%u, port_map=%x device_id=%x"
+		"\tversion=%u.%u, mcu_type=%s,\n",
+		mode, poe->num_ports_detected, port_map, device_id,
+		version_major, version_minor, poe->mcu_name);
+
+	if (poe->configuration_is_unsaved)
+		printf("\t(*) Unsaved configuration changes\n");
+	if (poe->remote_enable_gpio)
+		printf("\t(*) remote-enable signal is active \n");
+	if (poe->output_pairing_enabled)
+		printf("\t(*) Output pairing enabled\n");
+
+	return 0;
+}
+
+static int unreal_more_info(struct unreal_poe *poe)
+{
+	unsigned int pre_alloc, powerup_mode, disconnect, ddflag, num_pse;
+	float uvlo, ovlo;
+	int ret;
+
+	struct unreal_cmd extended_info = {
+		.raw = { 0x2b },
+		.len = 1,
+	};
+
+	ret = transcieve_command(poe, &extended_info);
+	if (ret < 0)
+		return ret;
+
+	uvlo = 33 + 0.06445 * extended_info.raw[2];
+	pre_alloc = extended_info.raw[3];
+	powerup_mode = extended_info.raw[4];
+	disconnect = extended_info.raw[5];
+	ddflag = extended_info.raw[6];
+	ovlo = 57 + 0.06445 * extended_info.raw[7];
+	num_pse = extended_info.raw[8];
+
+	printf("uvlo=%.1fV pre_alloc=%x powerup_mode=%s disconnect=%x\n"
+		"\tddflag=%x ovlo=%.1fV num_pse=%x\n",
+		uvlo, pre_alloc, powerup_mode_name(powerup_mode), disconnect,
+		ddflag, ovlo, num_pse);
+
 	return 0;
 }
 
@@ -290,6 +353,10 @@ static int unreal_init(struct poemgr_ctx *ctx)
 	tcflush(poe->fd, TCIOFLUSH);
 
 	ret = unreal_sys_info(poe);
+	if (ret < 0)
+		return ret;
+
+	ret = unreal_more_info(poe);
 	if (ret < 0)
 		return ret;
 
