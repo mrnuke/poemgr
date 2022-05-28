@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <uci.h>
@@ -136,6 +137,7 @@ static json_object *poemgr_create_port_fault_array(int faults)
 int poemgr_show(struct poemgr_ctx *ctx)
 {
 	struct json_object *root_obj, *ports_obj, *port_obj, *pse_arr, *pse_obj, *input_obj, *output_obj;
+	const bool has_input = !!ctx->profile->update_input_status;
 	struct poemgr_pse_chip *pse_chip;
 	struct poemgr_metric metric_buf;
 	char port_idx[3];
@@ -154,9 +156,11 @@ int poemgr_show(struct poemgr_ctx *ctx)
 	}
 
 	/* Update input status */
-	ret = ctx->profile->update_input_status(ctx);
-	if (ret)
-		return ret;
+	if (has_input) {
+		ret = ctx->profile->update_input_status(ctx);
+		if (ret)
+			return ret;
+	}
 
 	/* Update output status */
 	ret = ctx->profile->update_output_status(ctx);
@@ -170,9 +174,11 @@ int poemgr_show(struct poemgr_ctx *ctx)
 	json_object_object_add(root_obj, "profile", json_object_new_string(ctx->profile->name));
 
 	/* Get PoE input information */
-	input_obj = json_object_new_object();
-	json_object_object_add(input_obj, "type", json_object_new_string(poemgr_poe_type_to_string(ctx->input_status.type)));
-	json_object_object_add(root_obj, "input", input_obj);
+	if (has_input) {
+		input_obj = json_object_new_object();
+		json_object_object_add(input_obj, "type",json_object_new_string(poemgr_poe_type_to_string(ctx->input_status.type)));
+		json_object_object_add(root_obj, "input", input_obj);
+	}
 
 	/* Get PoE output information */
 	output_obj = json_object_new_object();
