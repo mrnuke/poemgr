@@ -19,6 +19,11 @@
 #define RESPONSE_TIMEOUT_MS		100
 
 struct unreal_poe {
+	unsigned int version_major;
+	unsigned int version_minor;
+	unsigned int pse_id;
+	unsigned int microcontroller_type;
+
 	unsigned int configuration_is_unsaved : 1;
 	unsigned int remote_enable_gpio : 1;
 	unsigned int output_pairing_enabled : 1;
@@ -88,6 +93,16 @@ static int urtl_to_poemgr_fault(uint8_t fault)
 	return faults[fault];
 }
 
+static void unreal_dump(const struct unreal_cmd *cmd, const char *prefix)
+{
+	size_t i;
+
+	fprintf(stderr, "%s", prefix);
+	for (i = 0; i < sizeof(cmd->raw); i++)
+		fprintf(stderr, " %02x", cmd->raw[i]);
+	fprintf(stderr, "\n");
+}
+
 static uint8_t calc_packet_checksum(const struct unreal_cmd *cmd)
 {
 	unsigned int i, csum = 0;
@@ -152,6 +167,8 @@ static int transcieve_command(struct unreal_poe *ctrl, struct unreal_cmd *cmd)
 		perror("Read packet");
 		return -errno;
 	}
+
+	unreal_dump(cmd, "RX <-");
 
 	if (cmd->raw[11] != calc_packet_checksum(cmd)) {
 		fprintf(stderr, "Bad checksum\n");
@@ -248,8 +265,7 @@ static int set_port_priority(struct unreal_poe *poe, uint8_t port, uint8_t prior
 
 static int unreal_sys_info(struct unreal_poe *poe)
 {
-	unsigned int system_status, version_major, version_minor;
-	unsigned int mode, port_map, device_id;
+	unsigned int mode, max_ports, port_map, system_status;
 	int ret;
 
 	struct unreal_cmd system_info = {
@@ -262,23 +278,23 @@ static int unreal_sys_info(struct unreal_poe *poe)
 		return ret;
 
 	mode = system_info.raw[2];
-	poe->num_ports_detected = system_info.raw[3];
+	max_ports = system_info.raw[3];
 	port_map = system_info.raw[4];
-	device_id = read16_be(system_info.raw + 5);
-	version_major = system_info.raw[7];
-	poe->mcu_name = mcu_name_from_type(system_info.raw[8]);
+	poe->pse_id = read16_be(system_info.raw + 5);
+	poe->version_major = system_info.raw[7];
+	poe->microcontroller_type = system_info.raw[8];
 	system_status = system_info.raw[9];
-	version_minor = system_info.raw[10];
+	poe->version_minor = system_info.raw[10];
 
-	poe->mcu_fw_version = (version_major << 8) | version_minor;
+	printf("PoE system: mode=%u, max_ports=%u, port_map=%x,  status=%x\n"
+		"\tdevice_id=%x, version=%u.%u, mcu_type=%s,\n",
+		mode, max_ports, port_map, system_status,
+		poe->pse_id, poe->version_major, poe->version_minor,
+		mcu_name_from_type(poe->microcontroller_type));
+
 	poe->configuration_is_unsaved = !!(system_status & (1 << 0));
 	poe->remote_enable_gpio = !!(system_status & (1 << 1));
 	poe->output_pairing_enabled = !!(system_status & (1 << 2));
-
-	printf("PoE system: mode=%u, max_ports=%u, port_map=%x device_id=%x"
-		"\tversion=%u.%u, mcu_type=%s,\n",
-		mode, poe->num_ports_detected, port_map, device_id,
-		version_major, version_minor, poe->mcu_name);
 
 	if (poe->configuration_is_unsaved)
 		printf("\t(*) Unsaved configuration changes\n");
